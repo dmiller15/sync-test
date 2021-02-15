@@ -21,7 +21,6 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 
 - [ ] Test A
 - [ ] Test B
-- [ ] Test C
 
 **Test Configuration**:
 * Environment:
