@@ -1,0 +1,30 @@
+on:
+  push:
+    branches:
+      - main 
+      - master
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout This Repo
+      uses: actions/checkout@v2
+      with:
+        path: main
+    - name: Checkout Template Repo
+      uses: actions/checkout@v2
+      with:
+        repository: dmiller15/template-test
+        path: template
+    - name: Sync template file
+      run: |
+        cmp ./template/.github/PULL_REQUEST_TEMPLATE.md ./main/.github/PULL_REQUEST_TEMPLATE.md || cp ./template/.github/PULL_REQUEST_TEMPLATE.md ./main/.github/PULL_REQUEST_TEMPLATE.md
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v3
+      with:
+        path: ./main/
+        commit-message: sync with template repo
+        delete-branch: true
+        branch: gha-sync-pr-temp
+        branch-suffix: timestamp
+        reviewers: dmiller15
