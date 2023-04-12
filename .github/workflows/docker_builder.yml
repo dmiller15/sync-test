@@ -20,11 +20,11 @@ jobs:
         run: |
           MATRIX=$(echo ${{ steps.changed-files.outputs.all_changed_files }} | jq -sR 'split("\n") | map(select(. != "")) | map(split(" ")) | flatten | map(split("/")) | map({"image": .[-3], "tag": .[-2]}) | @json' | sed -r 's/^"|"$//g' | tr -s /) 
           echo $MATRIX
-          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+          echo "matrix=[{\"image\":\"sniffles\",\"tag\":\"2.0.3\"},{\"image\":\"tidyverse\",\"tag\":\"3.6.1-canine-util\"}]" >> $GITHUB_OUTPUT
       - name: cat out
         id: cat-output
         run: |
-          cat $GITHUB_OUTPUT
+          echo ${{ steps.set-matrix.outputs.matrix }}
   job2:
     needs: build
     runs-on: ubuntu-22.04
