@@ -18,7 +18,8 @@ jobs:
       - name: Set Matrix
         id: set-matrix
         run: |
-          MATRIX=$(echo ${{ steps.changed-files.outputs.all_changed_files }} | jq -sR 'split("\n") | map(select(. != "")) | map(split(" ")) | flatten | map(split("/")) | map({"image": .[-3], "tag": .[-2]}) | {"include": .} | @json') 
+          MATRIX=$(echo ${{ steps.changed-files.outputs.all_changed_files }} | jq -sR 'split("\n") | map(select(. != "")) | map(split(" ")) | flatten | map(split("/")) | map({"image": .[-3], "tag": .[-2]}) | {"include": .} | @json' | sed -r 's/^"|"$//g' | tr -s /) 
+          echo $MATRIX
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
   job2:
     needs: build
