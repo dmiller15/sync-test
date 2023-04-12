@@ -3,6 +3,8 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-22.04
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -13,8 +15,19 @@ jobs:
         with:
           files: |
             */*/Dockerfile
-      - name: List all changed files
+      - name: Set Matrix
+        id: set-matrix
         run: |
-          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-            echo "$file was changed"
-          done
+          MATRIX=$(echo ${{ steps.changed-files.outputs.all_changed_files }} | jq -sR 'split("\n") | map(select(. != "")) | map(split(" ")) | flatten | map(split("/")) | map({"image": .[-3], "tag": .[-2]}) | {"include": .} | @json') 
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+  job2:
+    needs: build
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix: ${{ fromJSON(needs.build.outputs.matrix) }}
+    steps:
+      - id: echo-jobs
+        run: |
+          echo "Image name is ${{ matrix.image }}"
+          echo "Image tag is ${{ matrix.tag }}"
+        
