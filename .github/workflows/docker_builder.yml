@@ -18,7 +18,7 @@ jobs:
       - name: Set Matrix
         id: set-matrix
         run: |
-          MATRIX=$(echo ${{ steps.changed-files.outputs.all_changed_files }} | jq -sR 'split("\n") | map(select(. != "")) | map(split(" ")) | flatten | map(split("/")) | map({"image": .[-3], "tag": .[-2]}) | {"include": .} | @json' | sed -r 's/^"|"$//g' | tr -s /) 
+          MATRIX=$(echo ${{ steps.changed-files.outputs.all_changed_files }} | jq -sR 'split("\n") | map(select(. != "")) | map(split(" ")) | flatten | map(split("/")) | map({"image": .[-3], "tag": .[-2]}) | @json' | sed -r 's/^"|"$//g' | tr -s /) 
           echo $MATRIX
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
       - name: Echo matrix
@@ -29,7 +29,8 @@ jobs:
     needs: build
     runs-on: ubuntu-22.04
     strategy:
-      matrix: ${{ fromJSON(needs.build.outputs.matrix) }}
+      matrix:
+        include: ${{ fromJSON(needs.build.outputs.matrix) }}
     steps:
       - id: echo-jobs
         run: |
