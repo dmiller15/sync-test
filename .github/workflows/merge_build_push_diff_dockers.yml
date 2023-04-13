@@ -1,4 +1,10 @@
-on: [pull_request]
+on:
+  push:
+    branches:
+      - 'master'
+      - 'main'
+    paths:
+      - '*/*/Dockerfile'
 
 jobs:
   changed-dockerfiles:
