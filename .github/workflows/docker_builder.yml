@@ -41,5 +41,5 @@ jobs:
       - id: test-build
         uses: docker/build-push-action@v4
         with:
-          context: ${{ matrix.image }}/${{ matrix.tag }}
+          file: ${{ matrix.image }}/${{ matrix.tag }}/Dockerfile
           tags: pgc-images.sbgenomics.com/${{ secrets.CAVATICA_USERNAME }}/${{ matrix.image }}:${{ matrix.tag }}
