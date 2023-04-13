@@ -31,7 +31,7 @@ jobs:
     name: Build ${{ matrix.image }}:${{ matrix.tag }}
     needs: changed-dockerfiles
     runs-on: ubuntu-22.04
-    if: needs.changed-dockerfiles.any_changed == 'true'
+    if: needs.changed-dockerfiles.outputs.any_changed == 'true'
     strategy:
       matrix:
         include: ${{ fromJSON(needs.changed-dockerfiles.outputs.matrix) }}
