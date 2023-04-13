@@ -6,28 +6,32 @@ jobs:
     runs-on: ubuntu-22.04
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+      any_changed: ${{ steps.changed-files-docker.outputs.any_changed }}
     steps:
-      - uses: actions/checkout@v3
+      - id: checkout
+        uses: actions/checkout@v3
         name: Checkout Repo
         with:
           fetch-depth: 0
-      - id: changed-dockerfiles
-        name: Get Changed Dockerfiles
+      - id: changed-files-docker
         uses: tj-actions/changed-files@v35
+        name: Get Changed Dockerfiles
         with:
           files: |
             */*/Dockerfile
       - id: set-matrix
         name: Changed Dockerfiles String to Matrix
+        if: steps.changed-files-docker.outputs.any_changed == 'true'
         run: |
           # From a space separated list of files, split by space, and set grandparent/parent dirnames as tag/image
           # "./banana/1.0/Dockerfile ./panda/2.1/Dockerfile" -> [{"image":"banana", "tag":"1.0"}, {"image":"panda", "tag":"2.1"}]
-          MATRIX=$(echo ${{ steps.changed-files.outputs.all_changed_files }} | jq -Rr 'split(" ") | map(split("/")) | map({"image": .[-3], "tag": .[-2]}) | @json')
+          MATRIX=$(echo ${{ steps.changed-files-docker.outputs.all_changed_files }} | jq -Rr 'split(" ") | map(split("/")) | map({"image": .[-3], "tag": .[-2]}) | @json')
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
   build-dockerfiles:
     name: Build ${{ matrix.image }}:${{ matrix.tag }}
     needs: changed-dockerfiles
     runs-on: ubuntu-22.04
+    if: needs.changed-dockerfiles.any_changed == 'true'
     strategy:
       matrix:
         include: ${{ fromJSON(needs.changed-dockerfiles.outputs.matrix) }}
