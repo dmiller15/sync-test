@@ -38,6 +38,9 @@ jobs:
           registry: pgc-images.sbgenomics.com
           username: ${{ secrets.CAVATICA_USERNAME }}
           password: ${{ secrets.CAVATICA_TOKEN }}
+      - id: docker-buildx-setup
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
       - id: test-build
         uses: docker/build-push-action@v4
         with:
