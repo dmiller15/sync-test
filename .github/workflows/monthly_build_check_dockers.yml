@@ -1,6 +1,6 @@
 on:
   schedule:
-    - cron: '57 0 1 * *'
+    - cron: '57 0 * * *'
 
 jobs:
   get-dockerfiles:
@@ -17,7 +17,7 @@ jobs:
       - id: set-matrix
         name: Changed Dockerfiles String to Matrix
         run: |
-          MATRIX=$(find . -name Dockerfile | xargs -I{} dirname {} | jq -Rrs 'split("\n") | map(select(. != "")) | @json'
+          MATRIX=$(find * -name Dockerfile | xargs -I{} dirname {} | jq -Rrs 'split("\n") | map(select(. != "")) | @json'
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
   build-dockerfiles:
     name: Build ${{ matrix.docker_path }}

@@ -1,7 +1,7 @@
 on:
   pull_request:
     paths:
-      - "*/*/Dockerfile"
+      - "**/Dockerfile"
 
 jobs:
   changed-dockerfiles:
@@ -20,13 +20,15 @@ jobs:
         name: Get Changed Dockerfiles
         with:
           files: |
-            */*/Dockerfile
+            **/Dockerfile
       - id: set-matrix
         name: Changed Dockerfiles String to Matrix
         run: |
-          # From a space separated list of files, split by space, and set grandparent/parent dirnames as tag/image
-          # "./banana/1.0/Dockerfile ./panda/2.1/Dockerfile" -> [{"image":"banana", "tag":"1.0"}, {"image":"panda", "tag":"2.1"}]
-          MATRIX=$(echo ${{ steps.changed-files-docker.outputs.all_changed_files }} | jq -Rr 'split(" ") | map(split("/")) | map({"image": .[-3], "tag": .[-2]}) | @json')
+          # From a space separated list of files, split by space, and set grandparent/parent dirnames as image/tag
+          # Image names are always lowercase!
+          # If no version directory exists, default to latest
+          # "BANANA/1.0/Dockerfile panda/2.1/Dockerfile gatk/Dockerfile" -> [{"path":"./BANANA/1.0", "image":"banana", "tag":"1.0"}, {"path": "./panda/2.1", "image":"panda", "tag":"2.1"}, {"path": "gatk", "image":"gatk", "tag":"latest"}]
+          MATRIX=$(echo ${{ steps.changed-files-docker.outputs.all_changed_files }} | jq -Rr 'split(" ") | map(rtrimstr("/Dockerfile")) | map({"path": ., "image": (. | split("/")[0] | ascii_downcase), "tag": (. | split("/")[1] // "latest")}) | @json'
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
   build-dockerfiles:
     name: Build ${{ matrix.image }}:${{ matrix.tag }}
@@ -43,5 +45,4 @@ jobs:
         name: Test Build Dockerfile
         uses: docker/build-push-action@v4
         with:
-          context: "{{defaultContext}}:${{ matrix.image }}/${{ matrix.tag }}"
-          tags: ${{ matrix.image }}:${{ matrix.tag }}
+          context: "{{defaultContext}}:${{ matrix.path }}"
