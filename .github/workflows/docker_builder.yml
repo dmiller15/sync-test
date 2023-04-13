@@ -2,37 +2,38 @@ on: [pull_request]
 
 jobs:
   changed-dockerfiles:
+    name: Get Changed Dockerfiles Matrix
     runs-on: ubuntu-22.04
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - uses: actions/checkout@v3
+        name: Checkout Repo
         with:
           fetch-depth: 0
-      - name: Get changed Dockerfiles
-        id: changed-files
+      - id: changed-dockerfiles
+        name: Get Changed Dockerfiles
         uses: tj-actions/changed-files@v35
         with:
           files: |
             */*/Dockerfile
-      - name: Set Matrix
-        id: set-matrix
+      - id: set-matrix
+        name: Changed Dockerfiles String to Matrix
         run: |
-          # From a space separated list of files, split by space, then use the parent and grandparent dirs to get image and tag info
+          # From a space separated list of files, split by space, and set grandparent/parent dirnames as tag/image
+          # "./banana/1.0/Dockerfile ./panda/2.1/Dockerfile" -> [{"image":"banana", "tag":"1.0"}, {"image":"panda", "tag":"2.1"}]
           MATRIX=$(echo ${{ steps.changed-files.outputs.all_changed_files }} | jq -Rr 'split(" ") | map(split("/")) | map({"image": .[-3], "tag": .[-2]}) | @json')
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
-  build-docker:
+  build-dockerfiles:
+    name: Build ${{ matrix.image }}:${{ matrix.tag }}
     needs: changed-dockerfiles
     runs-on: ubuntu-22.04
     strategy:
       matrix:
         include: ${{ fromJSON(needs.changed-dockerfiles.outputs.matrix) }}
     steps:
-      - id: echo-jobs
-        run: |
-          echo "Image name is ${{ matrix.image }}"
-          echo "Image tag is ${{ matrix.tag }}"
       - id: cavatica-login
+        name: Login to Cavatica
         uses: docker/login-action@v2
         with:
           registry: pgc-images.sbgenomics.com
@@ -42,6 +43,7 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       - id: test-build
+        name: Test Build Dockerfile
         uses: docker/build-push-action@v4
         with:
           context: "{{defaultContext}}:${{ matrix.image }}/${{ matrix.tag }}"
