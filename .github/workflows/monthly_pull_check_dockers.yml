@@ -1,4 +1,4 @@
-name: Monthly Docker Build Validation
+name: Monthly Docker Pull Validation
 
 on:
   schedule:
@@ -30,11 +30,7 @@ jobs:
       matrix:
         include: ${{ fromJSON(needs.get-dockerfiles.outputs.matrix) }}
     steps:
-      - id: docker-buildx-setup
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-      - id: test-build
-        name: Test Build Dockerfile
-        uses: docker/build-push-action@v4
-        with:
-          context: "{{defaultContext}}:${{ matrix.path }}"
+      - id: docker-pull
+        name: Pull Docker Image
+        run: |
+          docker pull pgc-images.sbgenomics.com/${{ secrets.CAVATICA_USERNAME }}/${{ matrix.image }}:${{ matrix.tag }}

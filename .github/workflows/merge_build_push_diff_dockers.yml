@@ -1,3 +1,5 @@
+name: Latest Merged Dockerfile Build and Push
+
 on:
   push:
     branches:
