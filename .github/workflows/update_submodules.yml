@@ -1,0 +1,32 @@
+name: Update Foreign Submodules
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+    - id: checkout-annot
+      name: Checkout Annotation Repo
+      uses: actions/checkout@v4
+      with:
+        path: annotation
+    - id: get-germline-annot-version
+      name: Get Germline Annotation Workflow Version
+      run: |
+        PARSE_VERSION=$(yq '."sbg:links" | .[] | select(.label == "github-release") | .id' ./annotation/test.cwl | awk -F'/' '{print $NF}')
+        echo "GERMLINE_VERSION=$PARSE_VERSION" >> "$GITHUB_ENV"
+    - id: echo-germline-variables
+      run: |
+        echo $GERMLINE_VERSION
+        echo $GITHUB_REF_NAME
+    - id: germline-conditional
+      if: ${{ $GERMLINE_VERSION == $GITHUB_REF_NAME }}
+      run: |
+        echo "GERMLINE_VERSION and GITHUB_REF_NAME match!"
